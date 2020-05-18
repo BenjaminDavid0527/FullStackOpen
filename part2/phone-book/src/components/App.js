@@ -34,6 +34,8 @@ const App = () => {
   }
 
   const handleNumberChange = (event) => {
+    if (event.target.value === '') setNewNumber('')
+    else if (event.target.value.match(/[A-Za-z]/)) return
     setNewNumber(event.target.value)
   }
 
