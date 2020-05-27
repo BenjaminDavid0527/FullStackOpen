@@ -3,7 +3,6 @@ import Person from './Person'
 
 const Persons = (props) => {
     let persons = props.persons
-    
     if (props.filter !== '') {
         let block = props.filter.toLowerCase()
         persons =  persons.filter((person) => 
@@ -14,7 +13,10 @@ const Persons = (props) => {
     persons.map(person => 
     <Person name = {person.name} 
             number = {person.number} 
-            key = {person.name}/>
+            key = {person.name}
+            id = {person.id}
+            deletePerson = {() => props.deletePerson(person.id)}
+            />
     ))
 }
 

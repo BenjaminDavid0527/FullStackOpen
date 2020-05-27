@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import Persons from './Persons'
 import Filter from './Filter'
 import PersonForm from './PersonForm'
-import axios from 'axios'
+import personService from '../services/persons'
 
 const App = () => {
   const [ persons, setPersons] = useState([])
@@ -11,25 +11,51 @@ const App = () => {
   const [ filter, setFilter] = useState('')
 
   useEffect(() => {
-    axios
-      .get('http://localhost:3001/persons')
-      .then(response => {
-        setPersons(response.data)
-      })
+    personService
+      .getAll()
+      .then(data => setPersons(data))
   }, [])
   
   const addPerson = (event) => {
     event.preventDefault()
-    if (persons.some((person) => person.name === newName)) 
-        window.alert(`${newName} is already added to the phonebook`)
+    let individual = persons.find(person => person.name === newName)
+
+    if (individual && individual.number !== newNumber) {
+      if (window.confirm(`${individual.name} is already added to the phonebook, replace the old number with a new one?`)) {
+        const newPerson = {...individual, number: newNumber}
+        personService
+          .update(individual.id, newPerson)
+          .then(returnedPerson => {
+            setPersons(persons.map(person => 
+              person.id !== individual.id ? person : returnedPerson))
+          })
+      }
+    }
     else {
+        const newId = persons.length + 1
         const newPerson = {
             name: newName,
-            number: newNumber
+            number: newNumber,
+            id: newId
         }    
-        setPersons(persons.concat(newPerson))
-        setNewName('')
-        setNewNumber('')
+        personService
+          .create(newPerson)
+          .then(data => {
+            setPersons(persons.concat(data))
+            setNewName('')
+            setNewNumber('')
+          })
+    }
+  }
+
+  const deletePerson = (id) => {
+    const name = persons.find(person => person.id === id).name
+    if (window.confirm(`Delete ${name}?`)) {
+      personService
+        .deleteId(id)
+        .then(() => personService
+                    .getAll()
+                    .then(data => setPersons(data)))
     }
   }
 
@@ -65,7 +91,9 @@ const App = () => {
 
       <h2>Numbers</h2>
 
-      <Persons persons = {persons} filter = {filter} />
+      <Persons persons = {persons} filter = {filter} 
+               deletePerson = {deletePerson} 
+      />
     </div>
   )
 }
